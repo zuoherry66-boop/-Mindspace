@@ -1,13 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import type { InteractionSignal } from '../lib/interaction'
+import { createInteractionSignal, type InteractionSignal } from '../lib/interaction'
 import { DistanceStage } from './DistanceStage'
 
 describe('DistanceStage', () => {
   it('lets the user place the feeling farther away with the keyboard', () => {
     const interactionRef = createRef<InteractionSignal>()
-    interactionRef.current = { x: 0, y: 0, force: 0, velocity: 0, active: false, distance: 0.5 }
+    interactionRef.current = createInteractionSignal()
     const onContinue = vi.fn()
     render(<DistanceStage reflection="" interactionRef={interactionRef} onContinue={onContinue} />)
 

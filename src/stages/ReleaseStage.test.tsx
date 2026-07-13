@@ -1,13 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import type { InteractionSignal } from '../lib/interaction'
+import { createInteractionSignal, type InteractionSignal } from '../lib/interaction'
 import { ReleaseStage } from './ReleaseStage'
 
 describe('ReleaseStage', () => {
   it('turns keyboard pressure into a live spatial signal', () => {
     const interactionRef = createRef<InteractionSignal>()
-    interactionRef.current = { x: 0, y: 0, force: 0, velocity: 0, active: false, distance: 0.5 }
+    interactionRef.current = createInteractionSignal()
 
     render(
       <ReleaseStage
@@ -32,7 +32,7 @@ describe('ReleaseStage', () => {
   it('keeps writing as an optional safety-aware path', () => {
     const onContinue = vi.fn()
     const interactionRef = createRef<InteractionSignal>()
-    interactionRef.current = { x: 0, y: 0, force: 0, velocity: 0, active: false, distance: 0.5 }
+    interactionRef.current = createInteractionSignal()
 
     render(
       <ReleaseStage
