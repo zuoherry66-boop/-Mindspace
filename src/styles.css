@@ -823,9 +823,179 @@ textarea:focus-visible {
   color: #e7cba2;
 }
 
+.settle-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.34;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .release-ring-one { animation: core-turn 9s linear infinite; }
   .release-ring-two { animation: core-turn 15s linear infinite reverse; }
+}
+
+.distance-stage,
+.value-lights-stage {
+  width: 100%;
+  text-align: center;
+}
+
+.distance-stage h1,
+.value-lights-stage h1 {
+  max-width: none;
+  font-size: clamp(28px, 4vw, 52px);
+}
+
+.distance-stage blockquote {
+  max-width: 54ch;
+  margin: 12px auto 0;
+  color: rgba(234, 231, 223, 0.62);
+  font-family: "Songti SC", "Noto Serif SC", serif;
+  font-size: 15px;
+}
+
+.distance-field {
+  --distance: 0.5;
+  position: relative;
+  width: min(520px, 86vw);
+  height: min(54vh, 480px);
+  min-height: 340px;
+  margin: 8px auto 0;
+  touch-action: none;
+}
+
+.distance-field::before {
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(transparent, rgba(234, 231, 223, 0.2), transparent);
+  content: "";
+}
+
+.distance-label {
+  position: absolute;
+  left: calc(50% + 36px);
+  color: rgba(234, 231, 223, 0.46);
+  font-size: 11px;
+}
+
+.distance-label-near { top: 8%; }
+.distance-label-far { bottom: 8%; }
+
+.distance-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 112px;
+  height: 112px;
+  padding: 0;
+  margin: -56px 0 0 -56px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #e7cba2, #9a6e5e 38%, #233149 72%, transparent 74%);
+  cursor: grab;
+  box-shadow: 0 0 54px rgba(173, 124, 92, 0.24);
+  will-change: transform, opacity;
+}
+
+.distance-core span {
+  position: absolute;
+  inset: -20px;
+  border: 1px solid rgba(231, 203, 162, 0.18);
+  border-radius: 44% 56% 52% 48%;
+}
+
+.value-sky {
+  position: relative;
+  width: min(820px, 92vw);
+  height: min(55vh, 500px);
+  min-height: 360px;
+  margin: 8px auto 0;
+}
+
+.value-light {
+  position: absolute;
+  min-width: 112px;
+  min-height: 92px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: rgba(234, 231, 223, 0.58);
+  background: transparent;
+  cursor: pointer;
+  font-family: "Songti SC", "Noto Serif SC", serif;
+  font-size: 15px;
+  transition: color 180ms ease-out, transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.value-light span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d9ae78;
+  opacity: 0.52;
+  transform: translate(-50%, -50%);
+  transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1), height 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease-out;
+}
+
+.value-light:hover,
+.value-light:focus-visible,
+.value-light.is-chosen {
+  color: #f1d7ae;
+  transform: scale(1.12);
+}
+
+.value-light:hover span,
+.value-light:focus-visible span,
+.value-light.is-chosen span {
+  width: 72px;
+  height: 72px;
+  background: radial-gradient(circle, rgba(224, 181, 119, 0.32), transparent 70%);
+  opacity: 1;
+}
+
+.value-light-1 { top: 4%; left: 42%; }
+.value-light-2 { top: 24%; right: 8%; }
+.value-light-3 { right: 22%; bottom: 5%; }
+.value-light-4 { bottom: 2%; left: 28%; }
+.value-light-5 { bottom: 22%; left: 4%; }
+.value-light-6 { top: 18%; left: 14%; }
+
+.small-action-entry {
+  position: absolute;
+  z-index: 8;
+  bottom: 54px;
+  left: 50%;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(5, 6, 10, 0.86);
+  transform: translateX(-50%);
+}
+
+.small-action-entry label {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.small-action-entry label > span {
+  color: #d9ae78;
+  font-size: 11px;
+}
+
+.small-action-entry input {
+  width: min(360px, 58vw);
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 1px solid rgba(234, 231, 223, 0.28);
+  color: #eae7df;
+  background: transparent;
 }
 
 .microphone-panel {
