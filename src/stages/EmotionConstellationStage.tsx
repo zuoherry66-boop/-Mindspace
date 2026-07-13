@@ -13,21 +13,18 @@ export function EmotionConstellationStage({
 }: EmotionConstellationStageProps) {
   return (
     <section className="stage constellation-stage" aria-labelledby="constellation-title">
-      <h1 id="constellation-title">哪个词靠你最近？</h1>
-      <p className="visually-hidden">
-        空间猜测可能接近{candidates.join('或')}，但最终选择由你决定。
-      </p>
-      <div className="emotion-constellation">
-        <span className="constellation-center" aria-hidden="true" />
+      <p className="stage-eyebrow">空间只作猜测</p>
+      <h1 id="constellation-title">哪个词更贴近？</h1>
+      <p className="constellation-note">名字由你决定。</p>
+      <div className="emotion-field" aria-label="可选择的情绪词">
         {emotions.map((emotion, index) => (
           <button
-            className={`emotion-star emotion-star-${index + 1}${candidates.includes(emotion) ? ' is-near' : ''}`}
+            className={`emotion-word emotion-word-${index + 1}${candidates.includes(emotion) ? ' is-suggested' : ''}`}
             key={emotion}
             type="button"
             aria-label={emotion}
             onClick={() => onConfirm(emotion)}
           >
-            <span aria-hidden="true" />
             {emotion}
           </button>
         ))}
