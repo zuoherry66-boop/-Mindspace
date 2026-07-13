@@ -579,6 +579,99 @@ textarea:focus-visible {
   to { transform: rotate(1turn); }
 }
 
+.constellation-stage {
+  width: 100%;
+  text-align: center;
+}
+
+.constellation-stage h1 {
+  max-width: none;
+  font-size: clamp(28px, 4vw, 52px);
+}
+
+.emotion-constellation {
+  position: relative;
+  width: min(780px, 90vw);
+  height: min(62vh, 560px);
+  min-height: 400px;
+  margin: 12px auto 0;
+}
+
+.constellation-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #d9ae78;
+  box-shadow: 0 0 34px 18px rgba(217, 174, 120, 0.1);
+}
+
+.emotion-star {
+  position: absolute;
+  min-width: 84px;
+  min-height: 84px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: rgba(234, 231, 223, 0.68);
+  background: transparent;
+  cursor: pointer;
+  font-family: "Songti SC", "Noto Serif SC", serif;
+  font-size: 17px;
+  transition: color 180ms ease-out, transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.emotion-star span {
+  position: absolute;
+  inset: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8293ad;
+  opacity: 0.5;
+  transform: translate(-50%, -50%);
+  transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1), height 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease-out;
+}
+
+.emotion-star:hover,
+.emotion-star:focus-visible,
+.emotion-star.is-near {
+  color: #f0d7b1;
+  transform: scale(1.14);
+}
+
+.emotion-star:hover span,
+.emotion-star:focus-visible span,
+.emotion-star.is-near span {
+  width: 54px;
+  height: 54px;
+  background: radial-gradient(circle, rgba(210, 160, 112, 0.28), transparent 72%);
+  opacity: 1;
+}
+
+.emotion-star-1 { top: 8%; left: 46%; }
+.emotion-star-2 { top: 28%; right: 12%; }
+.emotion-star-3 { right: 22%; bottom: 8%; }
+.emotion-star-4 { bottom: 2%; left: 36%; }
+.emotion-star-5 { bottom: 18%; left: 9%; }
+.emotion-star-6 { top: 24%; left: 14%; }
+.emotion-star-7 { top: 48%; left: 43%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .emotion-star {
+    animation: star-drift 5.2s ease-in-out infinite alternate;
+  }
+
+  .emotion-star:nth-of-type(2n) { animation-delay: -1.7s; }
+  .emotion-star:nth-of-type(3n) { animation-delay: -3.1s; }
+}
+
+@keyframes star-drift {
+  to { translate: 0 -10px; }
+}
+
 .microphone-panel {
   max-width: 680px;
   margin: 30px 0 8px;
