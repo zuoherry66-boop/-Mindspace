@@ -434,6 +434,151 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
+.tactile-stage {
+  width: 100%;
+  text-align: center;
+}
+
+.tactile-stage h1 {
+  max-width: none;
+  font-size: clamp(28px, 4vw, 52px);
+}
+
+.gesture-caption {
+  margin: 12px 0 0;
+  color: rgba(234, 231, 223, 0.58);
+  font-size: 13px;
+}
+
+.tactile-field {
+  --field-force: 0;
+  position: relative;
+  width: min(760px, 88vw);
+  height: min(58vh, 520px);
+  min-height: 360px;
+  margin: 12px auto 0;
+  isolation: isolate;
+  touch-action: none;
+}
+
+.tactile-field::before,
+.tactile-field::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 48%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(174, 188, 213, calc(0.08 + var(--field-force) * 0.12));
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(calc(0.78 + var(--field-force) * 0.16));
+  transition: border-color 180ms ease-out, transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tactile-field::after {
+  width: 72%;
+  opacity: 0.42;
+  transform: translate(-50%, -50%) scale(calc(0.9 + var(--field-force) * 0.08));
+}
+
+.field-label {
+  position: absolute;
+  color: rgba(234, 231, 223, 0.54);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.field-label-top,
+.field-label-bottom {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.field-label-top {
+  top: 4%;
+}
+
+.field-label-bottom {
+  bottom: 4%;
+}
+
+.field-label-left,
+.field-label-right {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.field-label-left {
+  left: 2%;
+}
+
+.field-label-right {
+  right: 2%;
+}
+
+.emotion-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  margin: -48px 0 0 -48px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #f2d8ac, #b57b5e 38%, #26354c 72%, transparent 74%);
+  cursor: grab;
+  filter: saturate(0.84);
+  box-shadow: 0 0 48px rgba(181, 123, 94, 0.28);
+  transition: filter 160ms ease-out;
+  will-change: transform;
+}
+
+.emotion-core:active {
+  cursor: grabbing;
+  filter: saturate(1.16) brightness(1.08);
+}
+
+.emotion-core span,
+.emotion-core::before,
+.emotion-core::after {
+  position: absolute;
+  inset: -18px;
+  border: 1px solid rgba(226, 190, 144, 0.18);
+  border-radius: 48% 52% 57% 43%;
+  content: "";
+  pointer-events: none;
+}
+
+.emotion-core::after {
+  inset: -34px;
+  border-color: rgba(122, 147, 184, 0.12);
+  border-radius: 55% 45% 42% 58%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .emotion-core span {
+    animation: core-breathe 4.6s ease-in-out infinite alternate;
+  }
+
+  .emotion-core::before {
+    animation: core-turn 10s linear infinite;
+  }
+
+  .emotion-core::after {
+    animation: core-turn 16s linear infinite reverse;
+  }
+}
+
+@keyframes core-breathe {
+  to { transform: scale(1.16); opacity: 0.42; }
+}
+
+@keyframes core-turn {
+  to { transform: rotate(1turn); }
+}
+
 .microphone-panel {
   max-width: 680px;
   margin: 30px 0 8px;
