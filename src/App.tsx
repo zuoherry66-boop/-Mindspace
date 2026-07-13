@@ -136,7 +136,7 @@ export default function App() {
           />
         )
       case 'values':
-        return <ValueLightsStage onComplete={finishValues} />
+        return <ValueLightsStage interactionRef={interactionRef} onComplete={finishValues} />
       case 'closure':
         return <ClosureStage value={chosenValue} action={action} onRestart={reset} />
       case 'help':
