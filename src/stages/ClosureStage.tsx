@@ -7,19 +7,14 @@ interface ClosureStageProps {
 export function ClosureStage({ value, action, onRestart }: ClosureStageProps) {
   return (
     <section className="stage stage-closure" aria-labelledby="closure-title">
-      <p className="stage-eyebrow">你仍然在乎 · {value}</p>
-      <h1 id="closure-title">微光没有替你回答</h1>
-      <div className="closure-copy">
-        <p>你不需要证明痛苦是有意义的。</p>
-        <p>但你刚刚看见了：痛苦之外，你仍然在乎。</p>
-      </div>
+      <h1 id="closure-title">你还在这里</h1>
+      <p className="closure-value">{value}</p>
+      <p className="closure-copy">情绪没有消失，但你看见了仍然在乎的方向。</p>
       <div className="action-keepsake">
         <span>留给明天</span>
         <strong>{action}</strong>
       </div>
-      <button className="secondary-action" type="button" onClick={onRestart}>
-        重新进入空间
-      </button>
+      <button className="settle-action" type="button" onClick={onRestart}>再次进入</button>
     </section>
   )
 }

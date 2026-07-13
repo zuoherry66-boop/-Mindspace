@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react'
-import { ExperienceChrome } from './components/ExperienceChrome'
+import { useMemo, useRef, useState } from 'react'
 import { DreamCanvas } from './components/DreamCanvas'
-import { reflectionQuestions } from './data/questions'
+import { ExperienceChrome } from './components/ExperienceChrome'
 import { useMicrophoneLevel } from './hooks/useMicrophoneLevel'
 import {
   createInitialExperience,
@@ -10,73 +9,75 @@ import {
   selectEmotion,
   type EmotionLabel,
 } from './lib/experience'
+import { interpretGesture, type GesturePoint } from './lib/gesture'
+import { createInteractionSignal } from './lib/interaction'
 import { assessSafety, normalizeUserText } from './lib/safety'
-import { ArrivalStage } from './stages/ArrivalStage'
-import { CalibrationStage } from './stages/CalibrationStage'
-import { ClosureStage } from './stages/ClosureStage'
-import { ConfirmationStage } from './stages/ConfirmationStage'
-import { EmbodimentStage } from './stages/EmbodimentStage'
-import { ExpressionStage } from './stages/ExpressionStage'
-import { HelpStage } from './stages/HelpStage'
-import { ValuesStage } from './stages/ValuesStage'
-
 import type { VisualStage as Stage } from './lib/visualProfile'
+import { ArrivalStage } from './stages/ArrivalStage'
+import { ClosureStage } from './stages/ClosureStage'
+import { DistanceStage } from './stages/DistanceStage'
+import { EmotionConstellationStage } from './stages/EmotionConstellationStage'
+import { HelpStage } from './stages/HelpStage'
+import { ReleaseStage } from './stages/ReleaseStage'
+import { TactileCalibrationStage } from './stages/TactileCalibrationStage'
+import { ValueLightsStage } from './stages/ValueLightsStage'
 
 const stageProgress: Record<Stage, number> = {
   arrival: 0,
-  calibration: 0.2,
-  confirmation: 0.4,
-  expression: 0.55,
-  embodiment: 0.7,
-  values: 0.85,
+  calibration: 0.18,
+  confirmation: 0.36,
+  expression: 0.54,
+  embodiment: 0.72,
+  values: 0.88,
   closure: 1,
   help: 0,
 }
 
 export default function App() {
   const [stage, setStage] = useState<Stage>('arrival')
-  const [questionIndex, setQuestionIndex] = useState(0)
   const [experience, setExperience] = useState(createInitialExperience)
-  const [prefersMicrophone, setPrefersMicrophone] = useState(false)
   const [reflection, setReflection] = useState('')
   const [chosenValue, setChosenValue] = useState('')
   const [action, setAction] = useState('')
   const [reducedMotion, setReducedMotion] = useState(
     () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
   )
+  const interactionRef = useRef(createInteractionSignal())
   const microphone = useMicrophoneLevel()
-
   const candidates = useMemo(() => deriveEmotionCandidates(experience), [experience])
+
+  const resetInteraction = () => {
+    Object.assign(interactionRef.current, createInteractionSignal())
+  }
 
   const reset = () => {
     microphone.stop()
+    resetInteraction()
     setStage('arrival')
-    setQuestionIndex(0)
     setExperience(createInitialExperience())
-    setPrefersMicrophone(false)
     setReflection('')
     setChosenValue('')
     setAction('')
   }
 
-  const answerQuestion = (answer: string) => {
-    const question = reflectionQuestions[questionIndex]
-    const nextExperience = recordAnswer(experience, question.key, answer)
-    setExperience(nextExperience)
-    if (questionIndex === reflectionQuestions.length - 1) {
-      setStage('confirmation')
-      return
-    }
-    setQuestionIndex((current) => current + 1)
+  const completeGesture = (point: GesturePoint) => {
+    const meaning = interpretGesture(point)
+    let next = recordAnswer(experience, 'energy', meaning.energy)
+    next = recordAnswer(next, 'body', meaning.body)
+    next = recordAnswer(next, 'impulse', meaning.impulse)
+    setExperience(next)
+    setStage('confirmation')
   }
 
   const confirmEmotion = (emotion: EmotionLabel) => {
     setExperience((current) => selectEmotion(current, emotion))
+    resetInteraction()
     setStage('expression')
   }
 
-  const acceptReflection = (input: string) => {
+  const finishRelease = (input: string) => {
     microphone.stop()
+    resetInteraction()
     const normalized = normalizeUserText(input)
     if (assessSafety(normalized) === 'urgent') {
       setStage('help')
@@ -86,7 +87,7 @@ export default function App() {
     setStage('embodiment')
   }
 
-  const completeExperience = (value: string, nextAction: string) => {
+  const finishValues = (value: string, nextAction: string) => {
     setChosenValue(value)
     setAction(normalizeUserText(nextAction))
     setStage('closure')
@@ -95,41 +96,36 @@ export default function App() {
   const content = (() => {
     switch (stage) {
       case 'arrival':
-        return (
-          <ArrivalStage
-            onStart={(withMicrophone) => {
-              setPrefersMicrophone(withMicrophone)
-              setStage('calibration')
-            }}
-          />
-        )
+        return <ArrivalStage onStart={() => setStage('calibration')} />
       case 'calibration':
-        return (
-          <CalibrationStage
-            index={questionIndex}
-            total={reflectionQuestions.length}
-            question={reflectionQuestions[questionIndex]}
-            onAnswer={answerQuestion}
-          />
-        )
+        return <TactileCalibrationStage interactionRef={interactionRef} onComplete={completeGesture} />
       case 'confirmation':
-        return <ConfirmationStage candidates={candidates} onConfirm={confirmEmotion} />
+        return <EmotionConstellationStage candidates={candidates} onConfirm={confirmEmotion} />
       case 'expression':
         return (
-          <ExpressionStage
-            emotion={experience.confirmedEmotion ?? candidates[0]}
-            prefersMicrophone={prefersMicrophone}
+          <ReleaseStage
+            emotion={experience.confirmedEmotion ?? candidates[0] ?? '说不清'}
+            interactionRef={interactionRef}
             microphoneStatus={microphone.status}
             microphoneLevel={microphone.level}
             onStartMicrophone={() => void microphone.start()}
             onStopMicrophone={microphone.stop}
-            onContinue={acceptReflection}
+            onContinue={finishRelease}
           />
         )
       case 'embodiment':
-        return <EmbodimentStage reflection={reflection} onContinue={() => setStage('values')} />
+        return (
+          <DistanceStage
+            reflection={reflection}
+            interactionRef={interactionRef}
+            onContinue={() => {
+              resetInteraction()
+              setStage('values')
+            }}
+          />
+        )
       case 'values':
-        return <ValuesStage onComplete={completeExperience} />
+        return <ValueLightsStage onComplete={finishValues} />
       case 'closure':
         return <ClosureStage value={chosenValue} action={action} onRestart={reset} />
       case 'help':
@@ -142,6 +138,7 @@ export default function App() {
       progress={stageProgress[stage]}
       onHelp={() => {
         microphone.stop()
+        resetInteraction()
         setStage('help')
       }}
       reducedMotion={reducedMotion}
@@ -151,9 +148,14 @@ export default function App() {
         stage={stage}
         emotion={experience.confirmedEmotion ?? candidates[0] ?? '说不清'}
         microphoneLevel={microphone.level}
+        interactionRef={interactionRef}
         reducedMotion={reducedMotion}
       />
-      <div className={reducedMotion ? 'stage-layer reduce-motion' : 'stage-layer'} aria-live="polite">
+      <div
+        key={stage}
+        className={reducedMotion ? 'stage-layer reduce-motion' : 'stage-layer'}
+        aria-live="polite"
+      >
         {content}
       </div>
     </ExperienceChrome>
