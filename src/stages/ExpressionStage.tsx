@@ -1,12 +1,33 @@
 import { useState } from 'react'
+import type { MicrophoneStatus } from '../hooks/useMicrophoneLevel'
 
 interface ExpressionStageProps {
   emotion: string
   prefersMicrophone: boolean
+  microphoneStatus: MicrophoneStatus
+  microphoneLevel: number
+  onStartMicrophone: () => void
+  onStopMicrophone: () => void
   onContinue: (reflection: string) => void
 }
 
-export function ExpressionStage({ emotion, prefersMicrophone, onContinue }: ExpressionStageProps) {
+const statusCopy: Record<MicrophoneStatus, string> = {
+  idle: '麦克风尚未开启。',
+  requesting: '正在等待你的授权……',
+  active: '正在感知声音的强弱；声音不会被录音或上传。',
+  denied: '没有获得麦克风权限，你仍然可以继续书写。',
+  unavailable: '当前浏览器无法使用麦克风，你仍然可以继续书写。',
+}
+
+export function ExpressionStage({
+  emotion,
+  prefersMicrophone,
+  microphoneStatus,
+  microphoneLevel,
+  onStartMicrophone,
+  onStopMicrophone,
+  onContinue,
+}: ExpressionStageProps) {
   const [text, setText] = useState('')
 
   return (
@@ -17,9 +38,35 @@ export function ExpressionStage({ emotion, prefersMicrophone, onContinue }: Expr
         你不需要说得完整。可以写下一句话，也可以什么都不写，只在这里停一会儿。
       </p>
       {prefersMicrophone && (
-        <p className="microphone-pending" role="status">
-          麦克风将在下一视觉切片接入；此刻可以先用文字完成这段旅程。
-        </p>
+        <div className="microphone-panel">
+          <div className="microphone-heading">
+            <span>声音感知</span>
+            <span className="local-only">仅在本机</span>
+          </div>
+          <p role="status">{statusCopy[microphoneStatus]}</p>
+          <div
+            className="voice-meter"
+            role="meter"
+            aria-label="当前声音强度"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(microphoneLevel * 100)}
+          >
+            <span style={{ transform: `scaleX(${Math.max(0.02, microphoneLevel)})` }} />
+          </div>
+          {microphoneStatus === 'active' ? (
+            <button className="text-action" type="button" onClick={onStopMicrophone}>关闭麦克风</button>
+          ) : (
+            <button
+              className="text-action"
+              type="button"
+              disabled={microphoneStatus === 'requesting'}
+              onClick={onStartMicrophone}
+            >
+              开启麦克风
+            </button>
+          )}
+        </div>
       )}
       <label className="reflection-input">
         <span>此刻最难说的话</span>

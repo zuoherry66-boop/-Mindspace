@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { ExperienceChrome } from './components/ExperienceChrome'
+import { DreamCanvas } from './components/DreamCanvas'
 import { reflectionQuestions } from './data/questions'
+import { useMicrophoneLevel } from './hooks/useMicrophoneLevel'
 import {
   createInitialExperience,
   deriveEmotionCandidates,
@@ -18,15 +20,7 @@ import { ExpressionStage } from './stages/ExpressionStage'
 import { HelpStage } from './stages/HelpStage'
 import { ValuesStage } from './stages/ValuesStage'
 
-type Stage =
-  | 'arrival'
-  | 'calibration'
-  | 'confirmation'
-  | 'expression'
-  | 'embodiment'
-  | 'values'
-  | 'closure'
-  | 'help'
+import type { VisualStage as Stage } from './lib/visualProfile'
 
 const stageProgress: Record<Stage, number> = {
   arrival: 0,
@@ -47,11 +41,15 @@ export default function App() {
   const [reflection, setReflection] = useState('')
   const [chosenValue, setChosenValue] = useState('')
   const [action, setAction] = useState('')
-  const [reducedMotion, setReducedMotion] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(
+    () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+  )
+  const microphone = useMicrophoneLevel()
 
   const candidates = useMemo(() => deriveEmotionCandidates(experience), [experience])
 
   const reset = () => {
+    microphone.stop()
     setStage('arrival')
     setQuestionIndex(0)
     setExperience(createInitialExperience())
@@ -78,6 +76,7 @@ export default function App() {
   }
 
   const acceptReflection = (input: string) => {
+    microphone.stop()
     const normalized = normalizeUserText(input)
     if (assessSafety(normalized) === 'urgent') {
       setStage('help')
@@ -120,6 +119,10 @@ export default function App() {
           <ExpressionStage
             emotion={experience.confirmedEmotion ?? candidates[0]}
             prefersMicrophone={prefersMicrophone}
+            microphoneStatus={microphone.status}
+            microphoneLevel={microphone.level}
+            onStartMicrophone={() => void microphone.start()}
+            onStopMicrophone={microphone.stop}
             onContinue={acceptReflection}
           />
         )
@@ -137,11 +140,19 @@ export default function App() {
   return (
     <ExperienceChrome
       progress={stageProgress[stage]}
-      onHelp={() => setStage('help')}
+      onHelp={() => {
+        microphone.stop()
+        setStage('help')
+      }}
       reducedMotion={reducedMotion}
       onToggleMotion={() => setReducedMotion((current) => !current)}
     >
-      <div className="ambient-placeholder" aria-hidden="true" data-stage={stage} />
+      <DreamCanvas
+        stage={stage}
+        emotion={experience.confirmedEmotion ?? candidates[0] ?? '说不清'}
+        microphoneLevel={microphone.level}
+        reducedMotion={reducedMotion}
+      />
       <div className={reducedMotion ? 'stage-layer reduce-motion' : 'stage-layer'} aria-live="polite">
         {content}
       </div>
