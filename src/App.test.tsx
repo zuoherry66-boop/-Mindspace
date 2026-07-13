@@ -2,59 +2,52 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import App from './App'
 
-function answerCalibration() {
-  fireEvent.click(screen.getByRole('button', { name: '沉下去' }))
-  fireEvent.click(screen.getByRole('button', { name: '胸口' }))
-  fireEvent.click(screen.getByRole('button', { name: '抓住，不想放弃' }))
+function enterAndNameEmotion() {
+  fireEvent.click(screen.getByRole('button', { name: '触碰微光' }))
+  const core = screen.getByRole('button', { name: '情绪核：使用方向键移动，按回车确认' })
+  fireEvent.keyDown(core, { key: 'ArrowLeft' })
+  fireEvent.keyDown(core, { key: 'ArrowDown' })
+  fireEvent.keyDown(core, { key: 'Enter' })
   fireEvent.click(screen.getByRole('button', { name: '不甘' }))
 }
 
-describe('Mindspace experience', () => {
-  it('keeps the user in control of the inferred emotion', () => {
+describe('Mindspace animation-first experience', () => {
+  it('moves from tactile sensing to a user-owned emotion word', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: '造梦空间' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '安静进入' }))
-    answerCalibration()
+    enterAndNameEmotion()
 
-    expect(screen.getByText(/我可能理解得不准确/)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '不甘' }))
-    expect(screen.getByRole('heading', { name: '把它放在这里' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '让它动起来' })).toBeInTheDocument()
+    expect(screen.getByText('不甘')).toBeInTheDocument()
   })
 
-  it('interrupts the immersive flow when text signals immediate danger', () => {
+  it('interrupts the visual flow when optional writing signals immediate danger', () => {
     render(<App />)
+    enterAndNameEmotion()
 
-    fireEvent.click(screen.getByRole('button', { name: '安静进入' }))
-    answerCalibration()
-    fireEvent.click(screen.getByRole('button', { name: '不甘' }))
-    fireEvent.change(screen.getByLabelText('写下一句此刻最难说的话'), {
+    fireEvent.change(screen.getByLabelText('如果愿意，可以写下一句'), {
       target: { value: '我真的活不下去了，想结束生命' },
     })
-    fireEvent.click(screen.getByRole('button', { name: '让空间承受它' }))
+    fireEvent.click(screen.getByRole('button', { name: '我停下来了' }))
 
     expect(screen.getByRole('heading', { name: '先确保你此刻安全' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /12356/ })).toHaveAttribute('href', 'tel:12356')
   })
 
-  it('carries a safe reflection into one small real-world action', () => {
+  it('reaches meaning through distance and value lights', () => {
     render(<App />)
+    enterAndNameEmotion()
 
-    fireEvent.click(screen.getByRole('button', { name: '安静进入' }))
-    answerCalibration()
-    fireEvent.click(screen.getByRole('button', { name: '不甘' }))
-    fireEvent.change(screen.getByLabelText('写下一句此刻最难说的话'), {
-      target: { value: '我很努力，但事情还是没有成功。' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: '让空间承受它' }))
-    fireEvent.click(screen.getByRole('button', { name: '暂时放远一点' }))
+    fireEvent.click(screen.getByRole('button', { name: '我停下来了' }))
+    fireEvent.click(screen.getByRole('button', { name: '就放在这里' }))
     fireEvent.click(screen.getByRole('button', { name: '认真生活' }))
-    fireEvent.change(screen.getByLabelText('给明天留一个很小的行动'), {
-      target: { value: '明早出门走十分钟' },
+    fireEvent.change(screen.getByLabelText('明天的一个小行动'), {
+      target: { value: '明早拉开窗帘' },
     })
-    fireEvent.click(screen.getByRole('button', { name: '留下这个下一步' }))
+    fireEvent.click(screen.getByRole('button', { name: '留给明天' }))
 
-    expect(screen.getByRole('heading', { name: '微光没有替你回答' })).toBeInTheDocument()
-    expect(screen.getByText('明早出门走十分钟')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '你还在这里' })).toBeInTheDocument()
+    expect(screen.getByText('明早拉开窗帘')).toBeInTheDocument()
   })
 })
