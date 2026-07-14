@@ -25,8 +25,13 @@ export function ExperienceChrome({
           <button className="quiet-control" type="button" onClick={onToggleMotion}>
             {reducedMotion ? '恢复动态' : '减少动态'}
           </button>
-          <button className="help-control" type="button" onClick={onHelp}>
-            退出 / 我需要真人帮助
+          <button
+            className="help-control"
+            type="button"
+            aria-label="退出体验，我需要真人帮助"
+            onClick={onHelp}
+          >
+            真人帮助
           </button>
         </div>
       </header>

@@ -41,6 +41,12 @@ export function ArrivalStage({ onStart }: ArrivalStageProps) {
         }}
         onPointerUp={cancelHold}
         onPointerCancel={cancelHold}
+        onKeyDown={(event) => {
+          if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) {
+            event.preventDefault()
+            start()
+          }
+        }}
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
           if (event.detail === 0) start()
         }}

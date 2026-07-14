@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 
 function enterAndNameEmotion() {
-  fireEvent.click(screen.getByRole('button', { name: '按住进入造梦空间' }))
+  fireEvent.keyDown(screen.getByRole('button', { name: '按住进入造梦空间' }), { key: 'Enter' })
   const core = screen.getByRole('button', { name: '情绪核：使用方向键移动，按回车确认' })
   fireEvent.keyDown(core, { key: 'ArrowLeft' })
   fireEvent.keyDown(core, { key: 'ArrowDown' })
@@ -28,7 +28,7 @@ describe('Mindspace animation-first experience', () => {
     expect(screen.queryByText('MINDSPACE')).not.toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: '体验进度' })).toHaveClass('visually-hidden')
 
-    fireEvent.click(screen.getByRole('button', { name: '按住进入造梦空间' }))
+    fireEvent.keyDown(screen.getByRole('button', { name: '按住进入造梦空间' }), { key: 'Enter' })
 
     expect(document.activeElement).toHaveAttribute('data-stage', 'calibration')
   })

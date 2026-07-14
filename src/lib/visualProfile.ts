@@ -29,13 +29,6 @@ export interface VisualProfile {
   weight: number
   blur: number
   accent: string
-  // Compatibility values for the current renderer. They disappear when the
-  // persistent living-matter canvas replaces the particle field.
-  speed: number
-  turbulence: number
-  gravity: number
-  warmth: number
-  glow: string
 }
 
 type EmotionMechanics = Pick<
@@ -93,10 +86,5 @@ export function getVisualProfile(stage: VisualStage, emotion: EmotionLabel): Vis
     weight,
     blur: mechanics.blur,
     accent: LIVING_TRACE,
-    speed: tempo,
-    turbulence: tension,
-    gravity: weight,
-    warmth: stage === 'closure' ? 1 : stage === 'values' ? 0.55 : 0.12,
-    glow: LIVING_TRACE,
   }
 }

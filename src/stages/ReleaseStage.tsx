@@ -130,8 +130,6 @@ export function ReleaseStage({
           if (event.key === ' ') settle()
         }}
       >
-        <span className="release-ring release-ring-one" aria-hidden="true" />
-        <span className="release-ring release-ring-two" aria-hidden="true" />
         <span className="release-instruction" aria-hidden="true">按住滑动 / 按住空格 / 发出声音</span>
       </button>
       <div className="release-controls">
