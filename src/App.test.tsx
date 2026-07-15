@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 
 function enterAndNameEmotion() {
-  fireEvent.click(screen.getByRole('button', { name: '触碰微光' }))
+  fireEvent.keyDown(screen.getByRole('button', { name: '按住进入造梦空间' }), { key: 'Enter' })
   const core = screen.getByRole('button', { name: '情绪核：使用方向键移动，按回车确认' })
   fireEvent.keyDown(core, { key: 'ArrowLeft' })
   fireEvent.keyDown(core, { key: 'ArrowDown' })
@@ -15,11 +15,22 @@ describe('Mindspace animation-first experience', () => {
   it('moves from tactile sensing to a user-owned emotion word', () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: '造梦空间' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '先别解释' })).toBeInTheDocument()
     enterAndNameEmotion()
 
     expect(screen.getByRole('heading', { name: '让它动起来' })).toBeInTheDocument()
     expect(screen.getByText('不甘')).toBeInTheDocument()
+  })
+
+  it('moves focus into each new scene without exposing wizard chrome', () => {
+    render(<App />)
+
+    expect(screen.queryByText('MINDSPACE')).not.toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: '体验进度' })).toHaveClass('visually-hidden')
+
+    fireEvent.keyDown(screen.getByRole('button', { name: '按住进入造梦空间' }), { key: 'Enter' })
+
+    expect(document.activeElement).toHaveAttribute('data-stage', 'calibration')
   })
 
   it('interrupts the visual flow when optional writing signals immediate danger', () => {
@@ -47,7 +58,7 @@ describe('Mindspace animation-first experience', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: '留给明天' }))
 
-    expect(screen.getByRole('heading', { name: '你还在这里' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '你没有消失' })).toBeInTheDocument()
     expect(screen.getByText('明早拉开窗帘')).toBeInTheDocument()
   })
 })

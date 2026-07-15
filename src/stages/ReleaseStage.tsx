@@ -31,10 +31,11 @@ export function ReleaseStage({
   onContinue,
 }: ReleaseStageProps) {
   const [text, setText] = useState('')
+  const draggingRef = useRef(false)
   const lastPointerRef = useRef({ x: 0, y: 0, time: 0 })
-  const settleTimerRef = useRef<number>(0)
 
   const settle = () => {
+    draggingRef.current = false
     if (!interactionRef.current) return
     interactionRef.current.active = false
     interactionRef.current.force = 0
@@ -42,7 +43,6 @@ export function ReleaseStage({
   }
 
   useEffect(() => () => {
-    window.clearTimeout(settleTimerRef.current)
     if (!interactionRef.current) return
     interactionRef.current.active = false
     interactionRef.current.force = 0
@@ -51,26 +51,44 @@ export function ReleaseStage({
 
   const reactToPointer = (event: PointerEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect()
+    const clientX = Number.isFinite(event.clientX) ? event.clientX : rect.left + rect.width / 2
+    const clientY = Number.isFinite(event.clientY) ? event.clientY : rect.top + rect.height / 2
     const point = clampGesture({
-      x: ((event.clientX - rect.left) / Math.max(rect.width, 1) - 0.5) * 2,
-      y: ((event.clientY - rect.top) / Math.max(rect.height, 1) - 0.5) * 2,
+      x: ((clientX - rect.left) / Math.max(rect.width, 1) - 0.5) * 2,
+      y: ((clientY - rect.top) / Math.max(rect.height, 1) - 0.5) * 2,
     })
     const now = performance.now()
     const elapsed = Math.max(16, now - lastPointerRef.current.time)
     const velocity = Math.min(
       1,
-      Math.hypot(event.clientX - lastPointerRef.current.x, event.clientY - lastPointerRef.current.y) / elapsed / 0.8,
+      Math.hypot(clientX - lastPointerRef.current.x, clientY - lastPointerRef.current.y) / elapsed / 0.8,
     )
-    lastPointerRef.current = { x: event.clientX, y: event.clientY, time: now }
+    lastPointerRef.current = { x: clientX, y: clientY, time: now }
     if (interactionRef.current) {
-      interactionRef.current.x = point.x
-      interactionRef.current.y = point.y
-      interactionRef.current.active = true
-      interactionRef.current.force = Math.max(0.24, velocity)
-      interactionRef.current.velocity = velocity
+      const signal = interactionRef.current
+      const energy = 0.035 + velocity * 0.09
+      signal.x = point.x
+      signal.y = point.y
+      signal.active = true
+      signal.force = Math.max(0.24, velocity)
+      signal.velocity = velocity
+      signal.trace = Math.min(1, signal.trace + energy)
+      signal.tension = Math.min(1, Math.max(signal.tension, 0.3 + velocity * 0.7))
+      signal.releaseEnergy = Math.min(1, signal.releaseEnergy + energy)
+      signal.settledness = Math.max(0, signal.settledness - energy * 0.8)
     }
-    window.clearTimeout(settleTimerRef.current)
-    settleTimerRef.current = window.setTimeout(settle, 180)
+  }
+
+  const pressWithKeyboard = () => {
+    if (!interactionRef.current) return
+    const signal = interactionRef.current
+    signal.active = true
+    signal.force = 1
+    signal.velocity = 1
+    signal.trace = Math.min(1, signal.trace + 0.12)
+    signal.tension = Math.min(1, Math.max(signal.tension, 0.82))
+    signal.releaseEnergy = Math.min(1, signal.releaseEnergy + 0.14)
+    signal.settledness = Math.max(0, signal.settledness - 0.12)
   }
 
   return (
@@ -80,27 +98,39 @@ export function ReleaseStage({
       <button
         className="release-surface"
         type="button"
-        aria-label="情绪释放空间：滑动指针或按住空格"
+        aria-label="情绪释放空间：按住滑动或按住空格"
         onPointerDown={(event) => {
-          if (interactionRef.current) interactionRef.current.force = 1
+          draggingRef.current = true
+          event.currentTarget.setPointerCapture?.(event.pointerId)
+          const rect = event.currentTarget.getBoundingClientRect()
+          lastPointerRef.current = {
+            x: Number.isFinite(event.clientX) ? event.clientX : rect.left + rect.width / 2,
+            y: Number.isFinite(event.clientY) ? event.clientY : rect.top + rect.height / 2,
+            time: performance.now(),
+          }
           reactToPointer(event)
         }}
-        onPointerMove={reactToPointer}
-        onPointerUp={settle}
+        onPointerMove={(event) => {
+          if (draggingRef.current) reactToPointer(event)
+        }}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+            event.currentTarget.releasePointerCapture?.(event.pointerId)
+          }
+          settle()
+        }}
+        onPointerCancel={settle}
+        onLostPointerCapture={settle}
         onKeyDown={(event) => {
           if (event.key !== ' ' || !interactionRef.current) return
           event.preventDefault()
-          interactionRef.current.active = true
-          interactionRef.current.force = 1
-          interactionRef.current.velocity = 1
+          if (!event.repeat) pressWithKeyboard()
         }}
         onKeyUp={(event) => {
           if (event.key === ' ') settle()
         }}
       >
-        <span className="release-ring release-ring-one" aria-hidden="true" />
-        <span className="release-ring release-ring-two" aria-hidden="true" />
-        <span className="release-instruction" aria-hidden="true">滑动 / 按住空格 / 发出声音</span>
+        <span className="release-instruction" aria-hidden="true">按住滑动 / 按住空格 / 发出声音</span>
       </button>
       <div className="release-controls">
         <button

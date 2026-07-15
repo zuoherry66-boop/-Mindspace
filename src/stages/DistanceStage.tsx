@@ -7,6 +7,14 @@ interface DistanceStageProps {
   onContinue: () => void
 }
 
+function describeDistance(distance: number) {
+  if (distance <= 0.18) return '很近'
+  if (distance <= 0.42) return '靠近'
+  if (distance <= 0.7) return '有一点远'
+  if (distance < 0.92) return '较远'
+  return '很远'
+}
+
 export function DistanceStage({ reflection, interactionRef, onContinue }: DistanceStageProps) {
   const fieldRef = useRef<HTMLDivElement>(null)
   const coreRef = useRef<HTMLButtonElement>(null)
@@ -18,10 +26,13 @@ export function DistanceStage({ reflection, interactionRef, onContinue }: Distan
     const core = coreRef.current
     const field = fieldRef.current
     if (!core || !field) return
-    const travel = Math.min(field.clientHeight * 0.56, 260)
-    core.style.transform = `translate3d(0, ${distance * travel - travel / 2}px, 0) scale(${1.24 - distance * 0.62})`
+    const depth = (distance - 0.5) * 2
+    const travelX = Math.min(field.clientWidth * 0.35, 280)
+    const travelY = Math.min(field.clientHeight * 0.24, 140)
+    core.style.transform = `translate3d(${-depth * travelX}px, ${depth * travelY}px, 0) scale(${1.12 - distance * 0.48})`
     core.style.opacity = String(1 - distance * 0.42)
     core.setAttribute('aria-valuenow', String(Math.round(distance * 100)))
+    core.setAttribute('aria-valuetext', describeDistance(distance))
     field.style.setProperty('--distance', String(distance))
   }
 
@@ -60,15 +71,22 @@ export function DistanceStage({ reflection, interactionRef, onContinue }: Distan
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={50}
+          aria-valuetext="有一点远"
+          aria-orientation="vertical"
           onKeyDown={(event) => {
             const current = interactionRef.current?.distance ?? 0.5
-            if (event.key === 'ArrowUp') {
+            if (event.key === 'Home') {
               event.preventDefault()
-              renderDistance(current - 0.12)
-            }
-            if (event.key === 'ArrowDown') {
+              renderDistance(0)
+            } else if (event.key === 'End') {
               event.preventDefault()
-              renderDistance(current + 0.12)
+              renderDistance(1)
+            } else if (event.key === 'ArrowUp' || event.key === 'PageUp') {
+              event.preventDefault()
+              renderDistance(current - (event.key === 'PageUp' ? 0.24 : 0.12))
+            } else if (event.key === 'ArrowDown' || event.key === 'PageDown') {
+              event.preventDefault()
+              renderDistance(current + (event.key === 'PageDown' ? 0.24 : 0.12))
             }
           }}
         >

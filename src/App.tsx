@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { DreamCanvas } from './components/DreamCanvas'
 import { ExperienceChrome } from './components/ExperienceChrome'
 import { useMicrophoneLevel } from './hooks/useMicrophoneLevel'
@@ -10,7 +10,7 @@ import {
   type EmotionLabel,
 } from './lib/experience'
 import { interpretGesture, type GesturePoint } from './lib/gesture'
-import { createInteractionSignal } from './lib/interaction'
+import { createInteractionSignal, settleInteraction } from './lib/interaction'
 import { assessSafety, normalizeUserText } from './lib/safety'
 import type { VisualStage as Stage } from './lib/visualProfile'
 import { ArrivalStage } from './stages/ArrivalStage'
@@ -43,12 +43,24 @@ export default function App() {
     () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
   )
   const interactionRef = useRef(createInteractionSignal())
+  const stageLayerRef = useRef<HTMLDivElement>(null)
   const microphone = useMicrophoneLevel()
   const candidates = useMemo(() => deriveEmotionCandidates(experience), [experience])
 
   const resetInteraction = () => {
     Object.assign(interactionRef.current, createInteractionSignal())
   }
+
+  const moveToStage = (nextStage: Stage) => {
+    settleInteraction(interactionRef.current)
+    interactionRef.current.trace = Math.max(interactionRef.current.trace, stageProgress[nextStage])
+    setStage(nextStage)
+  }
+
+  useEffect(() => {
+    interactionRef.current.trace = Math.max(interactionRef.current.trace, stageProgress[stage])
+    stageLayerRef.current?.focus({ preventScroll: true })
+  }, [stage])
 
   const reset = () => {
     microphone.stop()
@@ -66,37 +78,37 @@ export default function App() {
     next = recordAnswer(next, 'body', meaning.body)
     next = recordAnswer(next, 'impulse', meaning.impulse)
     setExperience(next)
-    setStage('confirmation')
+    interactionRef.current.tension = Math.max(interactionRef.current.tension, Math.hypot(point.x, point.y))
+    moveToStage('confirmation')
   }
 
   const confirmEmotion = (emotion: EmotionLabel) => {
     setExperience((current) => selectEmotion(current, emotion))
-    resetInteraction()
-    setStage('expression')
+    moveToStage('expression')
   }
 
   const finishRelease = (input: string) => {
     microphone.stop()
-    resetInteraction()
+    settleInteraction(interactionRef.current)
     const normalized = normalizeUserText(input)
     if (assessSafety(normalized) === 'urgent') {
-      setStage('help')
+      moveToStage('help')
       return
     }
     setReflection(normalized)
-    setStage('embodiment')
+    moveToStage('embodiment')
   }
 
   const finishValues = (value: string, nextAction: string) => {
     setChosenValue(value)
     setAction(normalizeUserText(nextAction))
-    setStage('closure')
+    moveToStage('closure')
   }
 
   const content = (() => {
     switch (stage) {
       case 'arrival':
-        return <ArrivalStage onStart={() => setStage('calibration')} />
+        return <ArrivalStage onStart={() => moveToStage('calibration')} />
       case 'calibration':
         return <TactileCalibrationStage interactionRef={interactionRef} onComplete={completeGesture} />
       case 'confirmation':
@@ -119,13 +131,12 @@ export default function App() {
             reflection={reflection}
             interactionRef={interactionRef}
             onContinue={() => {
-              resetInteraction()
-              setStage('values')
+              moveToStage('values')
             }}
           />
         )
       case 'values':
-        return <ValueLightsStage onComplete={finishValues} />
+        return <ValueLightsStage interactionRef={interactionRef} onComplete={finishValues} />
       case 'closure':
         return <ClosureStage value={chosenValue} action={action} onRestart={reset} />
       case 'help':
@@ -136,10 +147,10 @@ export default function App() {
   return (
     <ExperienceChrome
       progress={stageProgress[stage]}
+      stage={stage}
       onHelp={() => {
         microphone.stop()
-        resetInteraction()
-        setStage('help')
+        moveToStage('help')
       }}
       reducedMotion={reducedMotion}
       onToggleMotion={() => setReducedMotion((current) => !current)}
@@ -153,7 +164,10 @@ export default function App() {
       />
       <div
         key={stage}
+        ref={stageLayerRef}
         className={reducedMotion ? 'stage-layer reduce-motion' : 'stage-layer'}
+        data-stage={stage}
+        tabIndex={-1}
         aria-live="polite"
       >
         {content}
